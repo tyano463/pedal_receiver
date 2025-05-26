@@ -1,0 +1,27 @@
+(module TP4056_USB-C_Module_4Pin (layer F.Cu) (tedit 5B307ECC)
+  (descr "4-pin footprint for TP4056 USB-C module header")
+  (tags "TP4056 USB-C")
+  (attr through_hole)
+
+  (fp_text reference "J?" (at 0 -2.54) (layer F.SilkS") hide
+    (effects (font (size 1 1) (thickness 0.15)))
+  )
+  (fp_text value "TP4056_USB-C_Module_4Pin" (at 3.81 3.0) (layer F.Fab)
+    (effects (font (size 1 1) (thickness 0.15)))
+  )
+
+  (pad 1 thru_hole circle (at 0 0) (size 1.8 1.8) (drill 1.0) (layers *.Cu *.Mask))
+  (pad 2 thru_hole circle (at 2.54 0) (size 1.8 1.8) (drill 1.0) (layers *.Cu *.Mask))
+  (pad 3 thru_hole circle (at 5.08 0) (size 1.8 1.8) (drill 1.0) (layers *.Cu *.Mask))
+  (pad 4 thru_hole circle (at 7.62 0) (size 1.8 1.8) (drill 1.0) (layers *.Cu *.Mask))
+
+  (fp_line (start -1 -1.5) (end 8.62 -1.5) (layer F.SilkS) (width 0.12))
+  (fp_line (start 8.62 -1.5) (end 8.62 1.5) (layer F.SilkS) (width 0.12))
+  (fp_line (start 8.62 1.5) (end -1 1.5) (layer F.SilkS) (width 0.12))
+  (fp_line (start -1 1.5) (end -1 -1.5) (layer F.SilkS) (width 0.12))
+
+  (fp_line (start -1 -1.5) (end -1 1.5) (layer F.CrtYd) (width 0.05))
+  (fp_line (start -1 1.5) (end 8.62 1.5) (layer F.CrtYd) (width 0.05))
+  (fp_line (start 8.62 1.5) (end 8.62 -1.5) (layer F.CrtYd) (width 0.05))
+  (fp_line (start 8.62 -1.5) (end -1 -1.5) (layer F.CrtYd) (width 0.05))
+)
