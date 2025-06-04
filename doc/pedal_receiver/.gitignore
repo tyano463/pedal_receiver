@@ -1,1 +1,4 @@
 /pedal_receiver-backups/
+/gerber/
+/*.zip
+/fp-info-cache
