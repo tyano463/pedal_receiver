@@ -1,0 +1,142 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node>
+    <interface name="org.freedesktop.DBus.Introspectable">
+        <method name="Introspect">
+            <arg name="xml" type="s" direction="out" />
+        </method>
+    </interface>
+    <interface name="org.bluez.Adapter1">
+        <method name="StartDiscovery"></method>
+        <method name="SetDiscoveryFilter">
+            <arg name="properties" type="a{sv}" direction="in" />
+        </method>
+        <method name="StopDiscovery"></method>
+        <method name="RemoveDevice">
+            <arg name="device" type="o" direction="in" />
+        </method>
+        <method name="GetDiscoveryFilters">
+            <arg name="filters" type="as" direction="out" />
+        </method>
+        <property name="Address" type="s" access="read"></property>
+        <property name="AddressType" type="s" access="read"></property>
+        <property name="Name" type="s" access="read"></property>
+        <property name="Alias" type="s" access="readwrite"></property>
+        <property name="Class" type="u" access="read"></property>
+        <property name="Connectable" type="b" access="readwrite"></property>
+        <property name="Powered" type="b" access="readwrite"></property>
+        <property name="PowerState" type="s" access="read"></property>
+        <property name="Discoverable" type="b" access="readwrite"></property>
+        <property name="DiscoverableTimeout" type="u" access="readwrite"></property>
+        <property name="Pairable" type="b" access="readwrite"></property>
+        <property name="PairableTimeout" type="u" access="readwrite"></property>
+        <property name="Discovering" type="b" access="read"></property>
+        <property name="UUIDs" type="as" access="read"></property>
+        <property name="Modalias" type="s" access="read"></property>
+        <property name="Roles" type="as" access="read"></property>
+        <property name="ExperimentalFeatures" type="as" access="read"></property>
+        <property name="Manufacturer" type="q" access="read"></property>
+        <property name="Version" type="y" access="read"></property>
+    </interface>
+    <interface name="org.freedesktop.DBus.Properties">
+        <method name="Get">
+            <arg name="interface" type="s" direction="in" />
+            <arg name="name" type="s" direction="in" />
+            <arg name="value" type="v" direction="out" />
+        </method>
+        <method name="Set">
+            <arg name="interface" type="s" direction="in" />
+            <arg name="name" type="s" direction="in" />
+            <arg name="value" type="v" direction="in" />
+        </method>
+        <method name="GetAll">
+            <arg name="interface" type="s" direction="in" />
+            <arg name="properties" type="a{sv}" direction="out" />
+        </method>
+        <signal name="PropertiesChanged">
+            <arg name="interface" type="s" />
+            <arg name="changed_properties" type="a{sv}" />
+            <arg name="invalidated_properties" type="as" />
+        </signal>
+    </interface>
+    <interface name="org.bluez.BatteryProviderManager1">
+        <method name="RegisterBatteryProvider">
+            <arg name="provider" type="o" direction="in" />
+        </method>
+        <method name="UnregisterBatteryProvider">
+            <arg name="provider" type="o" direction="in" />
+        </method>
+    </interface>
+    <interface name="org.bluez.GattManager1">
+        <method name="RegisterApplication">
+            <arg name="application" type="o" direction="in" />
+            <arg name="options" type="a{sv}" direction="in" />
+        </method>
+        <method name="UnregisterApplication">
+            <arg name="application" type="o" direction="in" />
+        </method>
+    </interface>
+    <interface name="org.bluez.Media1">
+        <method name="RegisterEndpoint">
+            <arg name="endpoint" type="o" direction="in" />
+            <arg name="properties" type="a{sv}" direction="in" />
+        </method>
+        <method name="UnregisterEndpoint">
+            <arg name="endpoint" type="o" direction="in" />
+        </method>
+        <method name="RegisterPlayer">
+            <arg name="player" type="o" direction="in" />
+            <arg name="properties" type="a{sv}" direction="in" />
+        </method>
+        <method name="UnregisterPlayer">
+            <arg name="player" type="o" direction="in" />
+        </method>
+        <method name="RegisterApplication">
+            <arg name="application" type="o" direction="in" />
+            <arg name="options" type="a{sv}" direction="in" />
+        </method>
+        <method name="UnregisterApplication">
+            <arg name="application" type="o" direction="in" />
+        </method>
+        <property name="SupportedUUIDs" type="as" access="read"></property>
+    </interface>
+    <interface name="org.bluez.NetworkServer1">
+        <method name="Register">
+            <arg name="uuid" type="s" direction="in" />
+            <arg name="bridge" type="s" direction="in" />
+        </method>
+        <method name="Unregister">
+            <arg name="uuid" type="s" direction="in" />
+        </method>
+    </interface>
+    <interface name="org.bluez.LEAdvertisingManager1">
+        <method name="RegisterAdvertisement">
+            <arg name="advertisement" type="o" direction="in" />
+            <arg name="options" type="a{sv}" direction="in" />
+        </method>
+        <method name="UnregisterAdvertisement">
+            <arg name="service" type="o" direction="in" />
+        </method>
+        <property name="ActiveInstances" type="y" access="read"></property>
+        <property name="SupportedInstances" type="y" access="read"></property>
+        <property name="SupportedIncludes" type="as" access="read"></property>
+        <property name="SupportedSecondaryChannels" type="as" access="read"></property>
+        <property name="SupportedFeatures" type="as" access="read"></property>
+        <property name="SupportedCapabilities" type="a{sv}" access="read"></property>
+    </interface>
+    <node name="dev_44_53_08_F1_6E_F5" />
+    <node name="dev_45_27_15_C4_38_F4" />
+    <node name="dev_4D_A4_19_F0_76_E7" />
+    <node name="dev_4D_D8_B3_69_E9_89" />
+    <node name="dev_4F_7B_96_1D_1A_59" />
+    <node name="dev_5F_11_A5_A5_E2_75" />
+    <node name="dev_61_85_1B_4E_E3_CA" />
+    <node name="dev_62_92_F6_D4_0C_87" />
+    <node name="dev_68_76_F4_93_4C_66" />
+    <node name="dev_6B_C1_EC_6F_2A_37" />
+    <node name="dev_79_E2_83_7A_D8_46" />
+    <node name="dev_7B_41_8C_32_5E_67" />
+    <node name="dev_7E_85_E9_53_BA_BB" />
+    <node name="dev_7F_65_2A_3E_7C_11" />
+    <node name="dev_C5_23_4B_7D_FB_0D" />
+    <node name="dev_F0_9E_9E_B3_FE_46" />
+</node>

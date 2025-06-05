@@ -15,5 +15,6 @@
 
 v_status_t v_log_init(void);
 v_status_t v_log_write(const char *s, ...);
+char *dump(const uint8_t *data, uint8_t size);
 
 #endif

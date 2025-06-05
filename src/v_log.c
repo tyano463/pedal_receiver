@@ -13,6 +13,7 @@ static char time_str[32];
 
 static v_status_t log_rotate(void);
 static bool exists(const char *);
+static char debug_buf[64];
 
 v_status_t v_log_init(void)
 {
@@ -113,4 +114,20 @@ error_return:
 static bool exists(const char *path)
 {
     return access(path, F_OK) == 0;
+}
+
+char *dump(const uint8_t *data, uint8_t _size)
+{
+    uint8_t size = min(_size, 16);
+    char *p = debug_buf;
+
+    for (int i = 0; i < size; i++)
+    {
+        p += sprintf(p, "%02X ");
+    }
+
+    int i = (p > debug_buf) ? -1 : 0;
+    p[i] = '\0';
+
+    return debug_buf;
 }
