@@ -60,6 +60,7 @@ static uint32_t current_time(void)
 
 static int check_single_instance(void)
 {
+    setuid(0);
     int fd = open(PID_FILE, O_RDWR | O_CREAT, 0644);
     if (fd < 0)
     {
@@ -659,7 +660,7 @@ gboolean periodic_task(gpointer user_data)
 #ifdef __V_EXT_FEATURE_H__
     uint8_t process_info[sizeof(v_notify_data_t)];
 #else
-    uint8_t process_info[3];
+    uint8_t process_info[4];
 #endif
 
     if (g_ble_scan_start_time)
@@ -685,12 +686,14 @@ gboolean periodic_task(gpointer user_data)
 #ifdef __V_EXT_FEATURE_H__
     v_notify_data_t *p = (v_notify_data_t *)process_info;
     p->kind = V_IPC_STATUS_NOTIFY;
+    p->feature = V_EXT_FEATURE_BLE_RECEIVER;
     p->bt.running = true;
     p->bt.connected = connected;
 #else
     process_info[0] = 0x10;
-    process_info[1] = true;
-    process_info[2] = connected;
+    process_info[1] = 1;
+    process_info[2] = true;
+    process_info[3] = connected;
 #endif
     send_ipc(process_info, sizeof(process_info));
     return TRUE;
