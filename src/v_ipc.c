@@ -8,7 +8,7 @@
 
 #define FIFO_PATH "/tmp/ipc_fifo"
 
-bool send_ipc(uint8_t *data, uint8_t size)
+bool send_ipc(const uint8_t *data, uint8_t size)
 {
     bool ret = false;
     int fd = open(FIFO_PATH, O_WRONLY);

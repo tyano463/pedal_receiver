@@ -4,7 +4,9 @@
 #include <string.h>
 #include <stdint.h>
 
-#define APP_NAME "pdf_viewer_lvgl"
+#define APP_NAME "pedal_receiver"
+#define DEBUG 1
+
 #define WIDTH 768
 #define HEIGHT 1024
 

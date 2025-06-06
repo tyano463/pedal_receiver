@@ -2,10 +2,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include "v_log.h"
 #include "v_ipc.h"
+
+#if __has_include("v_ext_feature.h")
+#include "v_ext_feature.h"
+#endif
 
 #define TARGET_UUID "2ae0ffc2-dd80-4bab-a3a2-01c6f6193761"
 #define CHARACTERISTIC_UUID "2ae0ffc2-dd81-4bab-a3a2-01c6f6193761"
@@ -20,6 +25,8 @@
 #define GATT_SERVICE_IFACE "org.bluez.GattService1"
 
 #define INVALID_SUBSCRIPTION_ID G_MAXUINT
+
+#define SCAN_TIMEOUT_SEC 5
 
 typedef struct str_peripheral
 {
@@ -40,6 +47,15 @@ static GMainLoop *main_loop;
 peripheral_t _g_target;
 peripheral_t *g_target;
 
+static uint32_t g_ble_scan_start_time;
+
+static uint32_t current_time(void)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (uint32_t)ts.tv_sec;
+}
+
 static void on_properties_changed(GDBusConnection *connection,
                                   const gchar *sender_name,
                                   const gchar *object_path,
@@ -58,16 +74,14 @@ static void on_properties_changed(GDBusConnection *connection,
     g_variant_get(parameters, "(&s@a{sv}@as)", &iface, &changed_props, NULL);
     if (g_strcmp0(iface, BLUEZ_DEVICE) != 0)
     {
-        d("");
         g_variant_unref(changed_props);
         return;
     }
 
-    d("");
     g_variant_iter_init(&iter, changed_props);
     while (g_variant_iter_loop(&iter, "{&sv}", &key, &value))
     {
-        d("%s: %s", key, value);
+        d("%s", key);
         if (g_strcmp0(key, "Connected") == 0)
         {
             gboolean connected = g_variant_get_boolean(value);
@@ -75,6 +89,7 @@ static void on_properties_changed(GDBusConnection *connection,
             {
                 g_print("Device disconnected!\n");
                 g_dbus_connection_signal_unsubscribe(connection, g_target->connection_monitor);
+                g_target->connection_monitor = INVALID_SUBSCRIPTION_ID;
                 connect(connection, g_target->device_path);
             }
         }
@@ -211,9 +226,8 @@ static void on_connected(GObject *source_object,
     {
         g_printerr("Failed to create ObjectManager proxy: %s\n", error->message);
         g_error_free(error);
-        return;
+        goto error_return;
     }
-    d("");
 
     // GetManagedObjects 呼び出し
     GVariant *result = g_dbus_proxy_call_sync(
@@ -230,7 +244,7 @@ static void on_connected(GObject *source_object,
         g_printerr("Failed to call GetManagedObjects: %s\n", error->message);
         g_error_free(error);
         g_object_unref(obj_manager);
-        return;
+        goto error_return;
     }
 
     GVariantIter *iter;
@@ -239,7 +253,6 @@ static void on_connected(GObject *source_object,
 
     g_variant_get(result, "(a{oa{sa{sv}}})", &iter);
 
-    d("");
     gboolean found = FALSE;
     while (g_variant_iter_loop(iter, "{&o@a{sa{sv}}}", &object_path, &interfaces))
     {
@@ -254,7 +267,6 @@ static void on_connected(GObject *source_object,
             GVariant *props;
 
             iface_iter = g_variant_iter_new(interfaces);
-            d("");
             while (g_variant_iter_loop(iface_iter, "{&s@a{sv}}", &iface_name, &props))
             {
                 if (found)
@@ -281,27 +293,27 @@ static void on_connected(GObject *source_object,
                 }
                 // g_variant_unref(props);
             }
-            d("");
             g_variant_iter_free(iface_iter);
         }
-        d("");
         // g_variant_unref(interfaces);
     }
-    d("");
 
     g_variant_iter_free(iter);
     g_variant_unref(result);
     g_object_unref(obj_manager);
+error_return:
+    return;
 }
 
 static void stop_scan(GDBusConnection *conn)
 {
     GError *error = NULL;
 
-    g_dbus_proxy_call(g_target->adapter_proxy, "StopDiscovery",
-                      NULL,
-                      G_DBUS_CALL_FLAGS_NONE,
-                      -1, NULL, NULL, NULL);
+    g_ble_scan_start_time = 0;
+    g_dbus_proxy_call_sync(g_target->adapter_proxy, "StopDiscovery",
+                           NULL,
+                           G_DBUS_CALL_FLAGS_NONE,
+                           -1, NULL, NULL);
 }
 
 static void connect(GDBusConnection *conn, const gchar *object)
@@ -465,6 +477,7 @@ static char *get_service_uuid(GDBusConnection *conn, char *object_path)
 error_return:
     return uuid;
 }
+
 static gboolean found_known_device(GDBusConnection *conn)
 {
     GError *error = NULL;
@@ -495,9 +508,7 @@ static gboolean found_known_device(GDBusConnection *conn)
         sprintf(object_path, DEFAULT_ADAPTER_PATH "/%s", name);
         xmlFree(name);
 
-        d("");
         char *uuid = get_service_uuid_from_device(conn, object_path);
-        d("");
         if (uuid)
         {
             d("uuid: %s", uuid);
@@ -574,6 +585,8 @@ static void start_scan(GDBusConnection *conn)
         return;
     }
 
+    g_ble_scan_start_time = current_time();
+
     d("");
 }
 
@@ -614,6 +627,50 @@ static void connection_info_init(GDBusConnection *conn)
     }
 }
 
+gboolean periodic_task(gpointer user_data)
+{
+    GDBusConnection *conn = (GDBusConnection *)user_data;
+
+#ifdef __V_EXT_FEATURE_H__
+    uint8_t process_info[sizeof(v_notify_data_t)];
+#else
+    uint8_t process_info[3];
+#endif
+
+    if (g_ble_scan_start_time)
+    {
+        uint32_t cur = current_time();
+        if ((cur - g_ble_scan_start_time) > SCAN_TIMEOUT_SEC)
+        {
+            stop_scan(conn);
+            d("### ERROR: foot switch not found");
+            g_main_loop_quit(main_loop);
+        }
+        else
+        {
+            if (found_known_device(conn))
+            {
+                connect(conn, g_target->device_path);
+                stop_scan(conn);
+            }
+        }
+    }
+
+    uint8_t connected = (g_target->connection_monitor != INVALID_SUBSCRIPTION_ID);
+#ifdef __V_EXT_FEATURE_H__
+    v_notify_data_t *p = (v_notify_data_t *)process_info;
+    p->kind = V_IPC_STATUS_NOTIFY;
+    p->bt.running = true;
+    p->bt.connected = connected;
+#else
+    process_info[0] = 0x10;
+    process_info[1] = true;
+    process_info[2] = connected;
+#endif
+    send_ipc(process_info, sizeof(process_info));
+    return TRUE;
+}
+
 int main(void)
 {
     GDBusConnection *conn;
@@ -642,6 +699,7 @@ int main(void)
     }
 
     main_loop = g_main_loop_new(NULL, FALSE);
+    g_timeout_add(1000, periodic_task, conn);
     g_main_loop_run(main_loop);
 
 error_return:

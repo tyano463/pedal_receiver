@@ -49,7 +49,9 @@ v_status_t v_log_write(const char *s, ...)
 {
     v_status_t status = ST_LOG_WRITE_FAILED;
 
+#if DEBUG
     log_fp = stderr;
+#endif
 
     ERR_RETn(!log_fp);
 
