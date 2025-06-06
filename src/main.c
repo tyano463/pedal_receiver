@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <fcntl.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include "v_log.h"
@@ -12,6 +13,7 @@
 #include "v_ext_feature.h"
 #endif
 
+#define PID_FILE "/run/pedal_receiver.pid"
 #define TARGET_UUID "2ae0ffc2-dd80-4bab-a3a2-01c6f6193761"
 #define CHARACTERISTIC_UUID "2ae0ffc2-dd81-4bab-a3a2-01c6f6193761"
 #define BLUEZ_BUS_NAME "org.bluez"
@@ -54,6 +56,29 @@ static uint32_t current_time(void)
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (uint32_t)ts.tv_sec;
+}
+
+static int check_single_instance(void)
+{
+    int fd = open(PID_FILE, O_RDWR | O_CREAT, 0644);
+    if (fd < 0)
+    {
+        perror("Failed to open PID file");
+        return -1;
+    }
+
+    if (lockf(fd, F_TLOCK, 0) < 0)
+    {
+        perror("Another instance is running");
+        close(fd);
+        return -1;
+    }
+
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%d\n", getpid());
+    write(fd, buf, strlen(buf));
+
+    return 0;
 }
 
 static void on_properties_changed(GDBusConnection *connection,
@@ -675,6 +700,11 @@ int main(void)
 {
     GDBusConnection *conn;
     GError *error = NULL;
+
+    if (check_single_instance() < 0)
+    {
+        return 1;
+    }
 
     v_log_init();
 
